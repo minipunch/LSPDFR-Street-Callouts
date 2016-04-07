@@ -14,6 +14,8 @@ namespace StreetCallouts.Callouts
     public class StolenVehicle : Callout
     {
         //Here we declare our variables, things we need or our callout
+        private string[] pedList = new string[] {"a_m_y_mexthug_01", "G_M_Y_MexGoon_03", "G_M_Y_MexGoon_02", "G_M_Y_MexGoon_01", "G_M_Y_SalvaGoon_01", "G_M_Y_SalvaGoon_02", "G_M_Y_SalvaGoon_03", "G_M_Y_Korean_01", "G_M_Y_Korean_02", "G_F_Y_ballas_01", "G_M_Y_StrPunk_01"};
+        private string[] vehicles = new string[] {"granger", "cavalcade", "cavalcade2", "baller2", "sadler", "speedo", "pony", "minivan", "bison", "bobcatxl", "burrito", "oracle2", "sultan", "futo", "banshee", "feltzer2", "elegy2", "jackal", "prairie", "zion", "zion2", "sentinel", "sentinel2", "penumbra", "buffalo2", "buffalo", "schwarzer", "dominator", "ruiner", "picador"};
         private Vehicle perpVehicle; // a rage vehicle
         private Vehicle backupVehicle; // back up
         private Ped perp1; // our criminals
@@ -46,18 +48,18 @@ namespace StreetCallouts.Callouts
             }
 
             //Create our criminal(s) in the world
-            perp1 = new Ped("a_m_y_mexthug_01", SpawnPoint, 0f);
+            perp1 = new Ped(this.pedList[Common.myRand.Next((int)this.pedList.Length)], SpawnPoint, 0f);
             if (scenario == 3)
-                perp2 = new Ped("a_m_y_mexthug_01", SpawnPoint, 0f);
+                perp2 = new Ped(this.pedList[Common.myRand.Next((int)this.pedList.Length)], SpawnPoint, 0f);
 
             if (scenario == 2)
                 NativeFunction.Natives.GiveWeaponToPed(perp1, 0x99B507EA, 1, true, true);
 
             //Create the stolen vehicle
-            perpVehicle = new Vehicle("oracle", SpawnPoint);
+            perpVehicle = new Vehicle(this.vehicles[Common.myRand.Next((int)this.vehicles.Length)], SpawnPoint);
 
             // Create the unit who "ran the plates" of the stolen vehicle
-            backupVehicle = new Vehicle("POLICE2", SpawnPoint.Around(25f));
+            backupVehicle = new Vehicle("POLICE4", SpawnPoint.Around(25f));
             backupOfficer1 = new Ped("S_M_Y_Cop_01", SpawnPoint, 0f);
 
             // Now that we have spawned them, check they actually exist and if not return false (preventing the callout from being accepted and aborting it)
