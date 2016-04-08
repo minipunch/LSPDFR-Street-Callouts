@@ -15,7 +15,10 @@ namespace StreetCallouts.Callouts
     {
         //Here we declare our variables, things we need or our callout
         private string[] pedList = new string[] {"a_m_y_mexthug_01", "G_M_Y_MexGoon_03", "G_M_Y_MexGoon_02", "G_M_Y_MexGoon_01", "G_M_Y_SalvaGoon_01", "G_M_Y_SalvaGoon_02", "G_M_Y_SalvaGoon_03", "G_M_Y_Korean_01", "G_M_Y_Korean_02", "G_F_Y_ballas_01", "G_M_Y_StrPunk_01"};
-        private string[] vehicles = new string[] {"granger", "cavalcade", "cavalcade2", "baller2", "sadler", "speedo", "pony", "minivan", "bison", "bobcatxl", "burrito", "oracle2", "sultan", "futo", "banshee", "feltzer2", "elegy2", "jackal", "prairie", "zion", "zion2", "sentinel", "sentinel2", "penumbra", "buffalo2", "buffalo", "schwarzer", "dominator", "ruiner", "picador"};
+        private string[] civVehicles = new string[] {"granger", "cavalcade", "cavalcade2", "baller2", "sadler", "speedo", "pony", "minivan", "bison", "bobcatxl", "burrito", "oracle2", "sultan", "futo", "banshee", "feltzer2", "elegy2", "jackal", "prairie", "zion", "zion2", "sentinel", "sentinel2", "penumbra", "buffalo2", "buffalo", "schwarzer", "dominator", "ruiner", "picador"};
+        private string[] copVehicles = new string[] {"police", "police2", "police3", "police4", "fbi", "fbi2"};
+        private string[] NotAcceptedResponses = new string[] {"OTHER_UNIT_TAKING_CALL_01", "OTHER_UNIT_TAKING_CALL_02", "OTHER_UNIT_TAKING_CALL_03", "OTHER_UNIT_TAKING_CALL_04", "OTHER_UNIT_TAKING_CALL_05", "OTHER_UNIT_TAKING_CALL_06", "OTHER_UNIT_TAKING_CALL_07"};
+        private string[] CodeFourDispatchResponse = new string[] {"REPORT_RESPONSE_COPY_01", "REPORT_RESPONSE_COPY_02", "REPORT_RESPONSE_COPY_03", "REPORT_RESPONSE_COPY_04"};
         private Vehicle perpVehicle; // a rage vehicle
         private Vehicle backupVehicle; // back up
         private Ped perp1; // our criminals
@@ -34,11 +37,13 @@ namespace StreetCallouts.Callouts
         /// <returns></returns>
         public override bool OnBeforeCalloutDisplayed()
         {
-            scenario = Common.myRand.Next(1, 3);
+            OutOfCarFlag = false;
+            scenario = Common.myRand.Next(1, 4);
             // scenarios:
             // 1 - one man, unarmed pursuit
             // 2 - one man, armed with a knife pursuit
             // 3 - two suspects, unarmed pursuit
+            // 4 - doesn't exist. only to help the chance of rolling a 3 (test)
 
             //Set the spawn point of the crime to be on a street around 320f (distance) away from the player.
             SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(320f));
@@ -56,10 +61,10 @@ namespace StreetCallouts.Callouts
                 NativeFunction.Natives.GiveWeaponToPed(perp1, 0x99B507EA, 1, true, true);
 
             //Create the stolen vehicle
-            perpVehicle = new Vehicle(this.vehicles[Common.myRand.Next((int)this.vehicles.Length)], SpawnPoint);
+            perpVehicle = new Vehicle(this.civVehicles[Common.myRand.Next((int)this.civVehicles.Length)], SpawnPoint);
 
             // Create the unit who "ran the plates" of the stolen vehicle
-            backupVehicle = new Vehicle("POLICE4", SpawnPoint.Around(25f));
+            backupVehicle = new Vehicle(this.copVehicles[Common.myRand.Next((int)this.copVehicles.Length)], SpawnPoint.Around(25f));
             backupOfficer1 = new Ped("S_M_Y_Cop_01", SpawnPoint, 0f);
 
             // Now that we have spawned them, check they actually exist and if not return false (preventing the callout from being accepted and aborting it)
@@ -80,7 +85,7 @@ namespace StreetCallouts.Callouts
             this.AddMinimumDistanceCheck(10f, perp1.Position);
 
                  // Set up our callout message and location
-            this.CalloutMessage = "Stolen vehicle" + "\nVEHICLE DESCRIPTION: " + perpVehicle.Model.Name + "\nPLATE #: " + perpVehicle.LicensePlate;
+            this.CalloutMessage = "Stolen Vehicle" + "\nModel: " + perpVehicle.Model.Name + "\nPLATE #: " + perpVehicle.LicensePlate;
             this.CalloutPosition = SpawnPoint;
 
             //Play the police scanner audio for this callout
@@ -111,7 +116,7 @@ namespace StreetCallouts.Callouts
                 Functions.RequestBackup(this.perp1.GetOffsetPosition(Vector3.RelativeBack), LSPD_First_Response.EBackupResponseType.Pursuit, LSPD_First_Response.EBackupUnitType.LocalUnit);
             }
 
-            Game.DisplaySubtitle("Hurry up! ~y~Assist ~w~your fellow officers!", 6500);
+            Game.DisplaySubtitle("~y~Assist ~w~your fellow officers!", 6500);
 
             return base.OnCalloutAccepted();
         }
@@ -128,6 +133,9 @@ namespace StreetCallouts.Callouts
             if (perpVehicle.Exists()) perpVehicle.Delete();
             if (backupVehicle.Exists()) backupVehicle.Delete();
             if (myBlip.Exists()) myBlip.Delete();
+            
+            // have another unit "respond" to it
+            Functions.PlayScannerAudio(this.NotAcceptedResponses[Common.myRand.Next((int)this.NotAcceptedResponses.Length)]);
         }
 
         //This is where it all happens, run all of your callouts logic here
@@ -135,20 +143,27 @@ namespace StreetCallouts.Callouts
         {
             base.Process();
 
-            if(scenario == 2)
+            GameFiber.StartNew(delegate
             {
-                if (perp1.IsOnFoot && OutOfCarFlag == false)
+                if (scenario == 2)
                 {
-                    perp1.Tasks.FightAgainst(Game.LocalPlayer.Character);
-                    OutOfCarFlag = true;
+                    if (perp1.Exists() && perp1.IsAlive)
+                        if(perp1.IsOnFoot && OutOfCarFlag == false)
+                        {
+                            perp1.KeepTasks = true;
+                            perp1.Tasks.FightAgainst(Game.LocalPlayer.Character).WaitForCompletion();
+                            OutOfCarFlag = true;
+                        }
                 }
-            }
 
-            //A simple check, if our pursuit has ended we end the callout
-            if (!Functions.IsPursuitStillRunning(pursuit))
-            {
-                this.End();
-            }
+                //A simple check, if our pursuit has ended we end the callout
+                if(!Functions.IsPursuitStillRunning(this.pursuit) || !perp1.IsAlive)
+                {
+                    this.End();
+                }
+
+
+            }, "Minipunch's Test Fiber");
         }
 
         /// <summary>
@@ -165,6 +180,15 @@ namespace StreetCallouts.Callouts
                 if (perp2.Exists()) perp2.Dismiss();
             if (perpVehicle.Exists()) perpVehicle.Dismiss();
             if (backupVehicle.Exists()) backupVehicle.Dismiss();
+
+
+            GameFiber.Wait(3200);
+            if(perp1.IsAlive)
+                Game.DisplaySubtitle("~y~You: ~w~Dispatch be advised, suspect(s) in custody", 5000);
+            else
+                Game.DisplaySubtitle("~y~You: ~w~SHOTS FIRED! SUBJECT IS DOWN!", 5000);
+            GameFiber.Wait(2000);
+            Functions.PlayScannerAudio(this.CodeFourDispatchResponse[Common.myRand.Next((int)this.CodeFourDispatchResponse.Length)]);
 
         }
     }
