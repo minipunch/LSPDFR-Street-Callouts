@@ -18,7 +18,6 @@ namespace StreetCallouts.Callouts
         private string[] civVehicles = new string[] {"granger", "cavalcade", "cavalcade2", "baller2", "sadler", "speedo", "pony", "minivan", "bison", "bobcatxl", "burrito", "oracle2", "sultan", "futo", "banshee", "feltzer2", "elegy2", "jackal", "prairie", "zion", "zion2", "sentinel", "sentinel2", "penumbra", "buffalo2", "buffalo", "schwarzer", "dominator", "ruiner", "picador"};
         private string[] copVehicles = new string[] {"police", "police2", "police3", "police4", "fbi", "fbi2"};
         private string[] NotAcceptedResponses = new string[] {"OTHER_UNIT_TAKING_CALL_01", "OTHER_UNIT_TAKING_CALL_02", "OTHER_UNIT_TAKING_CALL_03", "OTHER_UNIT_TAKING_CALL_04", "OTHER_UNIT_TAKING_CALL_05", "OTHER_UNIT_TAKING_CALL_06", "OTHER_UNIT_TAKING_CALL_07"};
-        private string[] CodeFourDispatchResponse = new string[] {"REPORT_RESPONSE_COPY_01", "REPORT_RESPONSE_COPY_02", "REPORT_RESPONSE_COPY_03", "REPORT_RESPONSE_COPY_04"};
         private Vehicle perpVehicle; // a rage vehicle
         private Vehicle backupVehicle; // back up
         private Ped perp1; // our criminals
@@ -46,10 +45,10 @@ namespace StreetCallouts.Callouts
             // 4 - doesn't exist. only to help the chance of rolling a 3 (test)
 
             //Set the spawn point of the crime to be on a street around 320f (distance) away from the player.
-            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(320f));
+            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(500f));
             while(SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 150f)
             {
-                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(320f));
+                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(5000f));
             }
 
             //Create our criminal(s) in the world
@@ -141,10 +140,10 @@ namespace StreetCallouts.Callouts
         //This is where it all happens, run all of your callouts logic here
         public override void Process()
         {
-            base.Process();
-
             GameFiber.StartNew(delegate
             {
+                base.Process();
+
                 if (scenario == 2)
                 {
                     if (perp1.Exists() && perp1.IsAlive)
@@ -180,16 +179,6 @@ namespace StreetCallouts.Callouts
                 if (perp2.Exists()) perp2.Dismiss();
             if (perpVehicle.Exists()) perpVehicle.Dismiss();
             if (backupVehicle.Exists()) backupVehicle.Dismiss();
-
-
-            GameFiber.Wait(3200);
-            if(perp1.IsAlive)
-                Game.DisplaySubtitle("~y~You: ~w~Dispatch be advised, suspect(s) in custody", 5000);
-            else
-                Game.DisplaySubtitle("~y~You: ~w~SHOTS FIRED! SUBJECT IS DOWN!", 5000);
-            GameFiber.Wait(2000);
-            Functions.PlayScannerAudio(this.CodeFourDispatchResponse[Common.myRand.Next((int)this.CodeFourDispatchResponse.Length)]);
-
         }
     }
 }
