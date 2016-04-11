@@ -15,23 +15,23 @@ namespace StreetCallouts.Callouts
     public class SuspiciousPerson1 : Callout
     {
         //Here we declare our variables, things we need or our callout
-        private string[] pedList = new string[] {"A_F_Y_Hippie_01", "A_M_Y_Skater_01", "A_M_M_FatLatin_01", "A_M_M_EastSA_01", "A_M_Y_Latino_01", "G_M_Y_FamDNF_01", "G_M_Y_FamCA_01", "G_M_Y_BallaSout_01", "G_M_Y_BallaOrig_01", "G_M_Y_BallaEast_01", "G_M_Y_StrPunk_02", "S_M_Y_Dealer_01", "A_M_M_RurMeth_01", "A_M_Y_MethHead_01", "A_M_M_Skidrow_01", "S_M_Y_Dealer_01", "a_m_y_mexthug_01", "G_M_Y_MexGoon_03", "G_M_Y_MexGoon_02", "G_M_Y_MexGoon_01", "G_M_Y_SalvaGoon_01", "G_M_Y_SalvaGoon_02", "G_M_Y_SalvaGoon_03", "G_M_Y_Korean_01", "G_M_Y_Korean_02", "G_M_Y_StrPunk_01" };
+        private string[] pedList = new string[] { "A_F_Y_Hippie_01", "A_M_Y_Skater_01", "A_M_M_FatLatin_01", "A_M_M_EastSA_01", "A_M_Y_Latino_01", "G_M_Y_FamDNF_01", "G_M_Y_FamCA_01", "G_M_Y_BallaSout_01", "G_M_Y_BallaOrig_01", "G_M_Y_BallaEast_01", "G_M_Y_StrPunk_02", "S_M_Y_Dealer_01", "A_M_M_RurMeth_01", "A_M_Y_MethHead_01", "A_M_M_Skidrow_01", "S_M_Y_Dealer_01", "a_m_y_mexthug_01", "G_M_Y_MexGoon_03", "G_M_Y_MexGoon_02", "G_M_Y_MexGoon_01", "G_M_Y_SalvaGoon_01", "G_M_Y_SalvaGoon_02", "G_M_Y_SalvaGoon_03", "G_M_Y_Korean_01", "G_M_Y_Korean_02", "G_M_Y_StrPunk_01" };
         private string[] copVehicles = new string[] { "police", "police2", "police3", "police4", "fbi", "fbi2" };
         private string[] NotAcceptedResponses = new string[] { "OTHER_UNIT_TAKING_CALL_01", "OTHER_UNIT_TAKING_CALL_02", "OTHER_UNIT_TAKING_CALL_03", "OTHER_UNIT_TAKING_CALL_04", "OTHER_UNIT_TAKING_CALL_05", "OTHER_UNIT_TAKING_CALL_06", "OTHER_UNIT_TAKING_CALL_07" };
-        private string[] CiviliansReporting = new string[] {"CITIZENS_REPORT_01", "CITIZENS_REPORT_02", "CITIZENS_REPORT_03", "CITIZENS_REPORT_04"};
-        private string[] AConjunctive = new string[] {"A_01", "A_02"};
+        private string[] CiviliansReporting = new string[] { "CITIZENS_REPORT_01", "CITIZENS_REPORT_02", "CITIZENS_REPORT_03", "CITIZENS_REPORT_04" };
+        private string[] DispatchCopyThat = new string[] { "REPORT_RESPONSE_COPY_01", "REPORT_RESPONSE_COPY_02", "REPORT_RESPONSE_COPY_03", "REPORT_RESPONSE_COPY_04" };
+        private string[] AConjunctive = new string[] { "A_01", "A_02" };
         private Ped subject;                    // our suspicious person
         private Vehicle bmxBike;                // his mode of travel
         private Vector3 SpawnPoint;             // area where suspicious person was spotted
         private Blip myBlip;                    // a gta v blip
         private LHandle pursuit;                // an API pursuit handle for any potential pursuits that occur
-        private int scenario = 1;               // random scenario generated below
-        private RelationshipGroup subjectGroup;
-        private RelationshipGroup playerGroup;
         bool hasDrugs = false;
-        bool enRoute = false;
         int storyLine = 1;
         bool startedPursuit = false;
+        bool wasClose = false;
+        bool alreadySubtitleIntrod = false;
+        int callOutMessage = 0;
 
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
@@ -48,7 +48,7 @@ namespace StreetCallouts.Callouts
             }
 
             // create the suspicious person
-            subject = new Ped(this.pedList[Common.myRand.Next((int)pedList.Length)],SpawnPoint, 0f);
+            subject = new Ped(this.pedList[Common.myRand.Next((int)pedList.Length)], SpawnPoint, 0f);
 
             // create his mode of transportation
             bmxBike = new Vehicle("bmx", SpawnPoint);
@@ -56,17 +56,15 @@ namespace StreetCallouts.Callouts
             // warp him onto it
             subject.WarpIntoVehicle(bmxBike, -1);
 
-            switch (Common.myRand.Next(1,4))
+            switch (Common.myRand.Next(1, 3))
             {
                 case 1:
                     break;
                 case 2:
-                    // 1 in 4 chance that he has a controlled substance on his person
+                    // 1 in 3 chance that he has a controlled substance on his person
                     hasDrugs = true;
                     break;
                 case 3:
-                    break;
-                case 4:
                     break;
             }
 
@@ -79,7 +77,21 @@ namespace StreetCallouts.Callouts
             this.AddMinimumDistanceCheck(10f, subject.Position);
 
             // Set up our callout message and location
-            this.CalloutMessage = "Suspicious Person\nNOTE: Subject on bicycle. Possible distribution of controlled substance.";
+            switch (Common.myRand.Next(1, 3))
+            {
+                case 1:
+                    this.CalloutMessage = "Suspicious Person\nINFO: Subject on a bike peering into vehicles.";
+                    callOutMessage = 1;
+                    break;
+                case 2:
+                    this.CalloutMessage = "Suspicious Person\nINFO: Possibly distributing narcotics";
+                    callOutMessage = 2;
+                    break;
+                case 3:
+                    this.CalloutMessage = "Suspicious Person\nINFO: Possibly in possession of narcotics.";
+                    callOutMessage = 3;
+                    break;
+            }
             this.CalloutPosition = SpawnPoint;
 
             //Play the police scanner audio for this callout
@@ -103,8 +115,6 @@ namespace StreetCallouts.Callouts
             // make subject cruise around
             subject.Tasks.CruiseWithVehicle(bmxBike, 16f, VehicleDrivingFlags.AllowWrongWay);
 
-            enRoute = true;
-
             Game.DisplaySubtitle("Contact the ~r~subject.", 6500);
 
             return base.OnCalloutAccepted();
@@ -119,7 +129,7 @@ namespace StreetCallouts.Callouts
             if (subject.Exists()) subject.Delete();
             if (bmxBike.Exists()) bmxBike.Delete();
             if (myBlip.Exists()) myBlip.Delete();
-           
+
             // have another unit "respond" to it
             Functions.PlayScannerAudio(this.NotAcceptedResponses[Common.myRand.Next((int)this.NotAcceptedResponses.Length)]);
         }
@@ -129,52 +139,115 @@ namespace StreetCallouts.Callouts
         {
             base.Process();
 
-            if(subject.DistanceTo(Game.LocalPlayer.Character) < 55f)
+            GameFiber.StartNew(delegate
             {
-                if (hasDrugs == true && startedPursuit == false)
+                if (subject.DistanceTo(Game.LocalPlayer.Character) < 25f)
                 {
-                    this.pursuit = Functions.CreatePursuit();
-                    Functions.AddPedToPursuit(this.pursuit, subject);
-                    startedPursuit = true;
-                }
-                else if (subject.DistanceTo(Game.LocalPlayer.Character) < 30f && Game.LocalPlayer.Character.CurrentVehicle.IsSirenOn && startedPursuit == false)
-                {
-                    subject.Tasks.Clear();
-                    subject.Tasks.AchieveHeading(180f + (Game.LocalPlayer.Character.Heading), 3000);
-                }
-
-                if(hasDrugs == false && subject.DistanceTo(Game.LocalPlayer.Character) < 13f && Game.IsKeyDown(System.Windows.Forms.Keys.Y))
-                {
-                    switch(storyLine)
+                    if (hasDrugs == true && startedPursuit == false)
                     {
-                        case 1:
-                            Game.DisplaySubtitle("Press ~y~Y ~w~to speak with subject", 5000);
-                            GameFiber.Wait(5000);
-                            Game.DisplaySubtitle("I was just going to my friends house sir! He lives right down the road!", 5000);
-                            storyLine++;
-                            break;
-                        case 2:
-                            Game.DisplaySubtitle("~b~You: ~w~Okay, relax buddy. Where are you coming from?", 5000);
-                            storyLine++;
-                            break;
-                        case 3:
-                            Game.DisplaySubtitle("I just came from the Ring Of Fire around the corner! Here's the receipt sir!", 5000);
-                            storyLine++;
-                            break;
-                        default:
-                            break;
+                        this.pursuit = Functions.CreatePursuit();
+                        Functions.AddPedToPursuit(this.pursuit, subject);
+                        startedPursuit = true;
+                    }
+
+                    if(subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.LocalPlayer.Character.IsOnFoot && alreadySubtitleIntrod == false)
+                    {
+                        Game.DisplaySubtitle("Press ~y~Y ~w~to speak with the subject", 5000);
+                        alreadySubtitleIntrod = true;
+                        wasClose = true;
+                    }
+
+                    if (hasDrugs == false && subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                    {
+                        switch (storyLine)
+                        {
+                            case 1:
+                                Game.DisplaySubtitle("~y~Suspect: ~w~I was just going to my friends house sir! He lives right down the road!", 5000);
+                                storyLine++;
+                                break;
+                            case 2:
+                                Game.DisplaySubtitle("~b~You: ~w~Okay, relax buddy. Where are you coming from?", 5000);
+                                storyLine++;
+                                break;
+                            case 3:
+                                Game.DisplaySubtitle("~y~Suspect: ~w~I just came from the Ring Of Fire around the corner! Here's the receipt sir!", 5000);
+                                storyLine++;
+                                break;
+                            case 4:
+                                if(callOutMessage == 1)
+                                    Game.DisplaySubtitle("~b~You: ~w~How come we have people saying you've been peering into vehicles?", 5000);
+                                if (callOutMessage == 2)
+                                    Game.DisplaySubtitle("~b~You: ~w~Why do we have some people saying they saw someone dealing drugs around here?", 5000);
+                                if (callOutMessage == 3)
+                                    Game.DisplaySubtitle("~b~You: ~w~What if I told you I saw you making a hand to hand transaction with someone back a few blocks?", 5000);
+                                storyLine++;
+                                break;
+                            case 5:
+                                if (callOutMessage == 1)
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Haha -- peering into vehicles? Sir i'm just riding my bike, sir...", 5000);
+                                if (callOutMessage == 2)
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Sir -- no way i'm not like that, sir.", 5000);
+                                if (callOutMessage == 3)
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Yeah, right! And where was that? I know my rights sir, my lawyer told me not to let cops search me.", 5000);
+                                storyLine++;
+                                // random chance to flee during this part of interaction
+                                if(Common.myRand.Next(1,4) == 4)
+                                {
+                                    this.pursuit = Functions.CreatePursuit();
+                                    Functions.AddPedToPursuit(this.pursuit, subject);
+                                    startedPursuit = true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
 
-            if (!subject.IsAlive)
-            {
-                this.End();
-            }
-            if (this.pursuit != null && !Functions.IsPursuitStillRunning(this.pursuit))
-            {
-                this.End();
-            }
+                // EXPERIMENTAL ***
+                // Press LCTNRL + Y to move subjet off road
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                {
+                    if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
+                    {
+                        Game.DisplayHelp("move combo keys working");
+                        subject.Tasks.GoToOffsetFromEntity(Game.LocalPlayer.Character, 0, 5.0f, 3.0f, 2.0f);
+                        GameFiber.Wait(5000);
+                    }
+                }
+
+                // Press LCNTRL + LSHFT + Y to force end call out
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                {
+                    if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LShiftKey))
+                    {
+                        if(Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
+                        {
+                            Game.DisplaySubtitle("~b~You: ~w~Dispatch we're code 4. Show me ~g~10-8.", 4000);
+                            Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)DispatchCopyThat.Length)]);
+                            this.End();
+                        }
+                    }
+                }
+            
+                // END CONDITIONS
+                if(subject.DistanceTo(Game.LocalPlayer.Character) >= 200f && wasClose == true)
+                {
+                    if(startedPursuit)
+                    {
+                        Game.DisplaySubtitle("~y~Suspect ~w~has escaped.", 4300);
+                    }
+                    this.End();
+                }
+                if (subject.IsDead || !subject.Exists() || Functions.IsPedArrested(subject))
+                {
+                    this.End();
+                }
+                if (this.pursuit != null && !Functions.IsPursuitStillRunning(this.pursuit))
+                {
+                    this.End();
+                }
+            }, "Suspicious Person Fiber [STREET CALLOUTS]");
         }
 
         /// <summary>

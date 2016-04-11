@@ -18,6 +18,7 @@ namespace StreetCallouts.Callouts
         private string[] civVehicles = new string[] {"granger", "cavalcade", "cavalcade2", "baller2", "sadler", "speedo", "pony", "minivan", "bison", "bobcatxl", "burrito", "oracle2", "sultan", "futo", "banshee", "feltzer2", "elegy2", "jackal", "prairie", "zion", "zion2", "sentinel", "sentinel2", "penumbra", "buffalo2", "buffalo", "schwarzer", "dominator", "ruiner", "picador"};
         private string[] copVehicles = new string[] {"police", "police2", "police3", "police4", "fbi", "fbi2"};
         private string[] NotAcceptedResponses = new string[] {"OTHER_UNIT_TAKING_CALL_01", "OTHER_UNIT_TAKING_CALL_02", "OTHER_UNIT_TAKING_CALL_03", "OTHER_UNIT_TAKING_CALL_04", "OTHER_UNIT_TAKING_CALL_05", "OTHER_UNIT_TAKING_CALL_06", "OTHER_UNIT_TAKING_CALL_07"};
+        private string[] DispatchCopyThat = new string[] { "REPORT_RESPONSE_COPY_01", "REPORT_RESPONSE_COPY_02", "REPORT_RESPONSE_COPY_03", "REPORT_RESPONSE_COPY_04" };
         private Vehicle perpVehicle; // a rage vehicle
         private Vehicle backupVehicle; // back up
         private Ped perp1; // our criminals
@@ -48,7 +49,7 @@ namespace StreetCallouts.Callouts
             SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(500f));
             while(SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 150f)
             {
-                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(5000f));
+                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(500f));
             }
 
             //Create our criminal(s) in the world
@@ -159,6 +160,17 @@ namespace StreetCallouts.Callouts
                 if(!Functions.IsPursuitStillRunning(this.pursuit) || !perp1.IsAlive)
                 {
                     this.End();
+                }
+
+                // Press LCNTRL + LSHFT + Y to force end call out
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                {
+                    if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LShiftKey) && Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
+                    {
+                        Game.DisplaySubtitle("~b~You: ~w~Dispatch we're code 4. Show me ~g~10-8.", 4000);
+                        Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)DispatchCopyThat.Length)]);
+                        this.End();
+                    }
                 }
 
 
