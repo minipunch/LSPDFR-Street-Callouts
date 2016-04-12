@@ -31,6 +31,7 @@ namespace StreetCallouts.Callouts
         bool startedPursuit = false;
         bool wasClose = false;
         bool alreadySubtitleIntrod = false;
+        bool hasTalkedBack = false;
         int callOutMessage = 0;
 
         /// <summary>
@@ -115,6 +116,7 @@ namespace StreetCallouts.Callouts
             // make subject cruise around
             subject.Tasks.CruiseWithVehicle(bmxBike, 16f, VehicleDrivingFlags.AllowWrongWay);
 
+            Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)this.DispatchCopyThat.Length)]);
             Game.DisplaySubtitle("Contact the ~r~subject.", 6500);
 
             return base.OnCalloutAccepted();
@@ -150,7 +152,7 @@ namespace StreetCallouts.Callouts
                         startedPursuit = true;
                     }
 
-                    if(subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.LocalPlayer.Character.IsOnFoot && alreadySubtitleIntrod == false)
+                    if(subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.LocalPlayer.Character.IsOnFoot && alreadySubtitleIntrod == false && Functions.IsPedGettingArrested(subject))
                     {
                         Game.DisplaySubtitle("Press ~y~Y ~w~to speak with the subject", 5000);
                         alreadySubtitleIntrod = true;
@@ -229,9 +231,15 @@ namespace StreetCallouts.Callouts
                         }
                     }
                 }
+
+                if(subject.Exists() && Functions.IsPedArrested(subject) && hasDrugs && subject.DistanceTo(Game.LocalPlayer.Character) < 15f && !hasTalkedBack)
+                {
+                    Game.DisplaySubtitle("~y~Suspect: ~w~I'm sorry sir I didn't mean to run -- I was scared!", 4000);
+                    hasTalkedBack = true;
+                }
             
                 // END CONDITIONS
-                if(subject.DistanceTo(Game.LocalPlayer.Character) >= 200f && wasClose == true)
+                if(subject.DistanceTo(Game.LocalPlayer.Character) >= 200f && wasClose)
                 {
                     if(startedPursuit)
                     {

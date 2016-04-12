@@ -89,7 +89,18 @@ namespace StreetCallouts.Callouts
             this.CalloutPosition = SpawnPoint;
 
             //Play the police scanner audio for this callout
-            Functions.PlayScannerAudioUsingPosition("OFFICERS_REPORT_03 CRIME_GRAND_THEFT_AUTO_04 IN_OR_ON_POSITION", SpawnPoint);
+            switch(Common.myRand.Next(1,3))
+            {
+                case 1:
+                    Functions.PlayScannerAudioUsingPosition("OFFICERS_REPORT_03 CRIME_GRAND_THEFT_AUTO_04 IN_OR_ON_POSITION", SpawnPoint);
+                    break;
+                case 2:
+                    Functions.PlayScannerAudioUsingPosition("OFFICERS_REPORT_03 CRIME_CARJACKING IN_OR_ON_POSITION", SpawnPoint);
+                    break;
+                case 3:
+                    Functions.PlayScannerAudioUsingPosition("OFFICERS_REPORT_03 STOLEN_VEHICLE IN_OR_ON_POSITION", SpawnPoint);
+                    break;
+            }
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -113,7 +124,7 @@ namespace StreetCallouts.Callouts
             Functions.AddCopToPursuit(this.pursuit, backupOfficer1);
             for(int x = 0; x < Common.myRand.Next(0,3); ++x)
             {
-                Functions.RequestBackup(this.perp1.GetOffsetPosition(Vector3.RelativeBack), LSPD_First_Response.EBackupResponseType.Pursuit, LSPD_First_Response.EBackupUnitType.LocalUnit);
+                Functions.RequestBackup(SpawnPoint, LSPD_First_Response.EBackupResponseType.Pursuit, LSPD_First_Response.EBackupUnitType.LocalUnit);
             }
 
             Game.DisplaySubtitle("~y~Assist ~w~your fellow officers!", 6500);
