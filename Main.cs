@@ -33,7 +33,7 @@ namespace StreetCallouts
             //Event handler for detecting if the player goes on duty
             Functions.OnOnDutyStateChanged += Functions_OnOnDutyStateChanged;
             Game.LogTrivial("Street Callouts by minipunch loaded!");
-            Game.DisplayNotification("~b~Street Callouts ~w~by ~b~minipunch ~w~loaded!");
+            Game.DisplayNotification("~r~Street Callouts ~w~by ~y~minipunch ~w~loaded!");
         }
 
         /// <summary>
@@ -47,6 +47,8 @@ namespace StreetCallouts
                 //Here we register our ExampleCallout class which is inside our Callouts folder (APIExample.Callouts namespace)
                 Functions.RegisterCallout(typeof(StolenVehicle));
                 Functions.RegisterCallout(typeof(SuspiciousPerson1));
+                Functions.RegisterCallout(typeof(SuspiciousPerson2));
+                Functions.RegisterCallout(typeof(ManWithKnife));
                 Game.LogTrivial("Street Callouts HAS BEEN LOADED");
             }
         }

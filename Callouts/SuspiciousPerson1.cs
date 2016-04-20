@@ -11,7 +11,7 @@ namespace StreetCallouts.Callouts
 {
     // A pedestrian on a BMX bike whom may or may not be carrying drugs on their person ;)
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("SuspiciousPerson1", CalloutProbability.VeryHigh)]
+    [CalloutInfo("SuspiciousPerson1", CalloutProbability.Low)]
     public class SuspiciousPerson1 : Callout
     {
         //Here we declare our variables, things we need or our callout
@@ -26,13 +26,13 @@ namespace StreetCallouts.Callouts
         private Vector3 SpawnPoint;             // area where suspicious person was spotted
         private Blip myBlip;                    // a gta v blip
         private LHandle pursuit;                // an API pursuit handle for any potential pursuits that occur
-        bool hasDrugs = false;
-        int storyLine = 1;
-        bool startedPursuit = false;
-        bool wasClose = false;
-        bool alreadySubtitleIntrod = false;
-        bool hasTalkedBack = false;
-        int callOutMessage = 0;
+        private bool hasDrugs = false;
+        private int storyLine = 1;
+        private bool startedPursuit = false;
+        private bool wasClose = false;
+        private bool alreadySubtitleIntrod = false;
+        private bool hasTalkedBack = false;
+        private int callOutMessage = 0;
 
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
@@ -96,7 +96,7 @@ namespace StreetCallouts.Callouts
             this.CalloutPosition = SpawnPoint;
 
             //Play the police scanner audio for this callout
-            Functions.PlayScannerAudioUsingPosition(CiviliansReporting[Common.myRand.Next((int)CiviliansReporting.Length)] + " " + AConjunctive[Common.myRand.Next((int)AConjunctive.Length)] + " SUSPICIOUS PERSON" + " IN_OR_ON_POSITION", SpawnPoint);
+            Functions.PlayScannerAudioUsingPosition(CiviliansReporting[Common.myRand.Next((int)CiviliansReporting.Length)] + " " + AConjunctive[Common.myRand.Next((int)AConjunctive.Length)] + " SUSPICIOUS_PERSON" + " IN_OR_ON_POSITION", SpawnPoint);
 
 
             return base.OnBeforeCalloutDisplayed();
@@ -152,7 +152,7 @@ namespace StreetCallouts.Callouts
                         startedPursuit = true;
                     }
 
-                    if(subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.LocalPlayer.Character.IsOnFoot && alreadySubtitleIntrod == false && Functions.IsPedGettingArrested(subject))
+                    if(subject.DistanceTo(Game.LocalPlayer.Character) < 15f && Game.LocalPlayer.Character.IsOnFoot && alreadySubtitleIntrod == false && pursuit == null)
                     {
                         Game.DisplaySubtitle("Press ~y~Y ~w~to speak with the subject", 5000);
                         alreadySubtitleIntrod = true;
@@ -203,18 +203,6 @@ namespace StreetCallouts.Callouts
                             default:
                                 break;
                         }
-                    }
-                }
-
-                // EXPERIMENTAL ***
-                // Press LCTNRL + Y to move subjet off road
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
-                {
-                    if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
-                    {
-                        Game.DisplayHelp("move combo keys working");
-                        subject.Tasks.GoToOffsetFromEntity(Game.LocalPlayer.Character, 0, 5.0f, 3.0f, 2.0f);
-                        GameFiber.Wait(5000);
                     }
                 }
 

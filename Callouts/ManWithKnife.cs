@@ -9,9 +9,13 @@ using System.Drawing;
 //Our namespace (aka folder) where we keep our callout classes.
 namespace StreetCallouts.Callouts
 {
-    // A pedestrian on a BMX bike whom may or may not be carrying drugs on their person ;)
+    /*
+    *
+    *   Man with a knife, whom attacks you
+    *
+    */
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("ManWithKnife", CalloutProbability.VeryHigh)]
+    [CalloutInfo("ManWithKnife", CalloutProbability.Low)]
     public class ManWithKnife : Callout
     {
         //Here we declare our variables, things we need or our callout
@@ -24,7 +28,15 @@ namespace StreetCallouts.Callouts
         private Vector3 SpawnPoint;             // area where suspicious person was spotted
         private Blip myBlip;                    // a gta v blip
         private LHandle pursuit;                // an API pursuit handle for any potential pursuits that occur
-        int callOutMessage = 0;
+        private int callOutMessage = 0;
+        private int scenario = 0;
+        private Ped playerPed;
+        private bool hasBegunAttacking = false;
+        private bool msg1 = false;
+        private bool msg2 = true;
+        private bool isArmed = false;
+        private int storyLine = 1;
+        private Ped[] pedAr;
 
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
@@ -33,43 +45,46 @@ namespace StreetCallouts.Callouts
         /// <returns></returns>
         public override bool OnBeforeCalloutDisplayed()
         {
+            playerPed = Game.LocalPlayer.Character;
+            scenario = Common.myRand.Next(0, 100);
+
             //Set the spawn point of the crime to be on a street around 500f (distance) away from the player.
-            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(520f));
-            while (SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 200f)
+            SpawnPoint = World.GetNextPositionOnStreet(playerPed.Position.Around(520f));
+            while (SpawnPoint.DistanceTo(playerPed.GetOffsetPosition(Vector3.RelativeFront)) < 200f)
             {
-                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(520f));
+                SpawnPoint = World.GetNextPositionOnStreet(playerPed.Position.Around(520f));
             }
 
+            subject = new Ped(pedList[Common.myRand.Next((int)pedList.Length)], SpawnPoint, 0f);
+
+            subject.BlockPermanentEvents = true;
+            subject.IsPersistent = true;
+            NativeFunction.Natives.SetPedPathCanUseClimbovers(subject, true);
 
 
             // check for any errors
-
+            if (!subject.Exists()) return false;
 
             // Show the user where the call out is about to happen and block very close peds.
             this.ShowCalloutAreaBlipBeforeAccepting(SpawnPoint, 100f);
             this.AddMinimumDistanceCheck(10f, subject.Position);
 
             // Set up our callout message and location
-            switch (Common.myRand.Next(1, 3))
+            switch (Common.myRand.Next(1, 2))
             {
                 case 1:
-                    this.CalloutMessage = "";
+                    this.CalloutMessage = "Subject brandishing a knife at pedestrian.";
                     callOutMessage = 1;
                     break;
                 case 2:
-                    this.CalloutMessage = "";
+                    this.CalloutMessage = "Man armed with a knife";
                     callOutMessage = 2;
-                    break;
-                case 3:
-                    this.CalloutMessage = "";
-                    callOutMessage = 3;
                     break;
             }
             this.CalloutPosition = SpawnPoint;
 
             //Play the police scanner audio for this callout
-            Functions.PlayScannerAudioUsingPosition("", SpawnPoint);
-
+            Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE_02 CIV_ASSISTANCE IN_OR_ON_POSITION", SpawnPoint);
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -82,9 +97,11 @@ namespace StreetCallouts.Callouts
         public override bool OnCalloutAccepted()
         {
             //We accepted the callout, so lets initilize our blip from before and attach it to our perp(s) so we know where he is.
-            
+            myBlip = subject.AttachBlip();
+            myBlip.Color = Color.Yellow;
 
-            // tasks
+            //tasks
+            subject.Tasks.Wander();
 
             Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)this.DispatchCopyThat.Length)]);
             Game.DisplaySubtitle("Contact the ~r~subject.", 6500);
@@ -98,7 +115,9 @@ namespace StreetCallouts.Callouts
         public override void OnCalloutNotAccepted()
         {
             base.OnCalloutNotAccepted();
-           
+
+            if (myBlip.Exists()) myBlip.Delete();
+            if (subject.Exists()) subject.Delete();
 
             // have another unit "respond" to it
             Functions.PlayScannerAudio(this.NotAcceptedResponses[Common.myRand.Next((int)this.NotAcceptedResponses.Length)]);
@@ -111,7 +130,73 @@ namespace StreetCallouts.Callouts
 
             GameFiber.StartNew(delegate
             {
-               
+
+                if (playerPed.IsDead) this.End();
+
+                if (subject.DistanceTo(playerPed.GetOffsetPosition(Vector3.RelativeFront)) < 18f && !isArmed)
+                {
+                    // arm with a knife
+                    NativeFunction.Natives.GiveWeaponToPed(subject, 0x99B507EA, 1, true, true);
+                    isArmed = true;
+                }
+
+                // subject attacks player
+                if (subject.Exists() && subject.DistanceTo(playerPed.GetOffsetPosition(Vector3.RelativeFront)) < 18f && !hasBegunAttacking)
+                {
+                   if(scenario > 40)
+                   {
+                        subject.Tasks.FightAgainst(playerPed);
+                        GameFiber.Wait(2000);
+                    }
+                    else
+                    {
+                        pursuit = Functions.CreatePursuit();
+                        Functions.AddPedToPursuit(pursuit, subject);
+                    }
+
+
+                    switch (Common.myRand.Next(1, 2))
+                    {
+                        case 1:
+                            Game.DisplaySubtitle("~r~Suspect: ~w~Kill me, pig! Kill me!", 4000);
+                            break;
+                        case 2:
+                            Game.DisplaySubtitle("~r~Suspect: ~w~Kill me! Come on, kill me!", 4000);
+                            break;
+                        default: break;
+                    }
+
+                    hasBegunAttacking = true;
+
+                }   
+
+                if (subject.IsDead) this.End();
+
+                if (Functions.IsPedArrested(subject)) this.End();
+
+                if (!subject.Exists()) this.End();
+
+                if (subject == null) this.End();
+
+                if (pursuit != null && !Functions.IsPursuitStillRunning(pursuit))
+                {
+                    this.End();
+                }
+
+                // Press LCNTRL + LSHFT + Y to force end call out -- not working?
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                {
+                    if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LShiftKey))
+                    {
+                        if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
+                        {
+                            Game.DisplaySubtitle("~b~You: ~w~Dispatch we're code 4. Show me ~g~10-8.", 4000);
+                            Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)DispatchCopyThat.Length)]);
+                            this.End();
+                        }
+                    }
+                }
+
             }, "Man with a knife [STREET CALLOUTS]");
         }
 
@@ -122,8 +207,9 @@ namespace StreetCallouts.Callouts
         /// </summary>
         public override void End()
         {
+            if (subject.Exists()) subject.Dismiss();
+            if (myBlip.Exists()) myBlip.Delete();
             base.End();
-
 
         }
     }

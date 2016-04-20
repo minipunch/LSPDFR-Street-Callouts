@@ -76,6 +76,7 @@
     <Compile Include="Callouts\ManWithKnife.cs" />
     <Compile Include="Callouts\StolenVehicle.cs" />
     <Compile Include="Callouts\SuspiciousPerson1.cs" />
+    <Compile Include="Callouts\SuspiciousPerson2.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
