@@ -33,7 +33,7 @@ namespace StreetCallouts
             //Event handler for detecting if the player goes on duty
             Functions.OnOnDutyStateChanged += Functions_OnOnDutyStateChanged;
             Game.LogTrivial("Street Callouts by minipunch loaded!");
-            Game.DisplayNotification("~r~Street Callouts ~w~by ~y~minipunch ~w~loaded!");
+            Game.DisplayNotification("~b~Street Callouts ~w~by ~b~minipunch ~g~loaded successfully!");
         }
 
         /// <summary>

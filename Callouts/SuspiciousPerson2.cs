@@ -26,12 +26,14 @@ namespace StreetCallouts.Callouts
         private Blip myBlip;                    // a gta v blip
         private Blip myBlip2;
         private LHandle pursuit;                // an API pursuit handle for any potential pursuits that occur
+        private LHandle pursuit2;
         private Ped playerPed;
         private int callOutMessage = 0;
         private int scenario = 0;
         private bool firstPedSmoking = false;
         private bool secondPedSmoking = false;
         private bool hasPursuitStarted = false;
+        private bool hasPursuitStarted2 = false;
         private string pedModelName1;
         private string pedModelName2;
         private Rage.Object joint1;
@@ -45,7 +47,9 @@ namespace StreetCallouts.Callouts
         private Blip droppedItemBlip2;
         private bool hasDroppedItem = false;
         private bool hasDroppedItem2 = false;
-
+        private Rage.Object blipHelper1;
+        private Rage.Object blipHelper2;
+        private int droppedItemCount = 0;
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
         /// the callout message and position for the API to display
@@ -211,14 +215,13 @@ namespace StreetCallouts.Callouts
                         // to make subject drop the joint when running
                         joint1.Delete();
                         joint1 = new Rage.Object("prop_sh_joint_01", subject1.Position.Around(2f));
-                        if(!hasDroppedItem && !droppedItem1.Exists())
-                            dropWhenFleeing1();
                     }
                 }
 
                 if (playerPed.DistanceTo(subject1) < 15f && !hasPursuitStarted)
                 {
                     subject1.Tasks.Clear();
+                    NativeFunction.Natives.TaskTurnPedToFaceEntity(subject1, playerPed, -1);
                     firstPedSmoking = false;
                     Game.DisplaySubtitle("Press ~y~Y ~w~to speak with the subject(s).", 5000);
                 }
@@ -227,16 +230,14 @@ namespace StreetCallouts.Callouts
                 {
                     if (playerPed.DistanceTo(subject2) < 23f && Common.myRand.Next(0, 100) < 40)
                     {
-                    GameFiber.Wait(2100);
-                    this.pursuit = Functions.CreatePursuit();
-                    Functions.AddPedToPursuit(pursuit, subject2);
-                    hasPursuitStarted = true;
-                    secondPedSmoking = false;
-                    // to make subject drop the joint when running
-                    joint2.Delete();
-                    joint2 = new Rage.Object("prop_sh_joint_01", subject2.Position.Around(2f));
-                        if (!hasDroppedItem2 && !droppedItem2.Exists())
-                            dropWhenFleeing2();
+                        GameFiber.Wait(2100);
+                        this.pursuit2 = Functions.CreatePursuit();
+                        Functions.AddPedToPursuit(pursuit2, subject2);
+                        hasPursuitStarted2 = true;
+                        secondPedSmoking = false;
+                        // to make subject drop the joint when running
+                        joint2.Delete();
+                        joint2 = new Rage.Object("prop_sh_joint_01", subject2.Position.Around(2f));
                     }
                 }
 
@@ -244,12 +245,57 @@ namespace StreetCallouts.Callouts
                 {
                     subject2.Tasks.Clear();
                     secondPedSmoking = false;
+                    NativeFunction.Natives.TaskTurnPedToFaceEntity(subject2, playerPed, -1);
                     Game.DisplaySubtitle("Press ~y~Y ~w~to speak with the subject(s).", 5000);
+                }
+
+                if (droppedItem1.Exists() || droppedItem2.Exists())
+                {
+                    if (Game.IsKeyDown(System.Windows.Forms.Keys.Insert))
+                    {
+                        if (droppedItem1.Exists())
+                        {
+                            if (playerPed.DistanceTo(droppedItem1) < 30f)
+                            {
+                                blipHelper1 = new Rage.Object("prop_sh_joint_01", playerPed.Position);
+                                NativeFunction.Natives.SetEntityVisible(blipHelper1, false, 0);
+                                droppedItemBlip1 = blipHelper1.AttachBlip();
+                                droppedItemBlip1.Color = Color.ForestGreen;
+                                Game.DisplayNotification("Marker placed.");
+                            }
+                        }
+                        if (droppedItem2.Exists())
+                        {
+                            if (playerPed.DistanceTo(droppedItem2) < 30f)
+                            {
+                                blipHelper2 = new Rage.Object("prop_sh_joint_01", playerPed.Position);
+                                NativeFunction.Natives.SetEntityVisible(blipHelper2, false, 0);
+                                droppedItemBlip2 = blipHelper2.AttachBlip();
+                                droppedItemBlip2.Color = Color.ForestGreen;
+                                Game.DisplayNotification("Marker placed.");
+                            }
+                        }
+                    }
+                }
+
+                if (!hasDroppedItem && !droppedItem1.Exists() && hasPursuitStarted)
+                {
+                    dropWhenFleeing1();
+                }
+
+                if (!hasDroppedItem2 && !droppedItem2.Exists() && hasPursuitStarted2)
+                {
+                    dropWhenFleeing2();
+                }
+
+                if ((hasDroppedItem && pursuit != null && !Functions.IsPursuitStillRunning(pursuit)) || (hasDroppedItem2 && pursuit2 != null && Functions.IsPursuitStillRunning(pursuit2)))
+                {
+                    beginBacktrack();
                 }
 
                 if (subject1.IsDead) this.End();
 
-                if (Functions.IsPedArrested(subject1)) this.End();
+                //if (Functions.IsPedArrested(subject1)) this.End();
 
                 if (!subject1.Exists()) this.End();
 
@@ -257,19 +303,19 @@ namespace StreetCallouts.Callouts
 
                 if (subject2.IsDead) this.End();
 
-                if (Functions.IsPedArrested(subject2)) this.End();
+                //if (Functions.IsPedArrested(subject2)) this.End();
 
                 if (!subject2.Exists()) this.End();
 
                 if (subject2 == null) this.End();
 
-                if (pursuit != null && !Functions.IsPursuitStillRunning(pursuit))
-                {
-                    this.End();
-                }
+                //if (pursuit != null && !Functions.IsPursuitStillRunning(pursuit))
+                //{
+                //this.End();
+                //}
 
-            // Press LCNTRL + LSHFT + Y to force end call out
-            if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                // Press LCNTRL + LSHFT + Y to force end call out
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
                 {
                     if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LShiftKey))
                     {
@@ -316,9 +362,7 @@ namespace StreetCallouts.Callouts
                 if (!hasDroppedItem && !droppedItem1.Exists())
                 {
                     droppedItem1 = new Rage.Object("prop_mp_drug_package", subject1.Position.Around(2f));
-                    droppedItemBlip1 = droppedItem1.AttachBlip();
-                    droppedItemBlip1.Color = Color.ForestGreen;
-                    GameFiber.Wait(1000);
+                    droppedItemCount++;
                     hasDroppedItem = true;
                 }
                 //prop_meth_bag_01
@@ -332,16 +376,41 @@ namespace StreetCallouts.Callouts
         // handles the dropping of items during a pursuit for subject2
         public void dropWhenFleeing2()
         {
+
                 GameFiber.Wait(8200);
 
                 if (!hasDroppedItem2 && !droppedItem2.Exists())
                 {
                     droppedItem2 = new Rage.Object("prop_mp_drug_package", subject2.Position.Around(2f));
-                    droppedItemBlip2 = droppedItem2.AttachBlip();
-                    droppedItemBlip2.Color = Color.ForestGreen;
-                    GameFiber.Wait(1000);
+                    droppedItemCount++;
                     hasDroppedItem2 = true;
                 }
+        }
+
+        public void beginBacktrack()
+        {
+            if (droppedItem1.Exists() && droppedItemBlip1.Exists())
+            {
+                if (playerPed.DistanceTo(droppedItem1) < 3f)
+                {
+                    droppedItem1.Delete();
+                    droppedItemBlip1.Delete();
+                    Game.DisplayNotification("~g~1 ~w~of ~g~1 ~w~peices of evidence recovered. Nice job!");
+                    GameFiber.Wait(2000);
+                    Game.DisplayNotification("The suspect has been charged with ~y~possession of a controlled substance~w~, and ~r~felony evasion.");
+                }
+            }
+
+            if (droppedItem2.Exists() && droppedItemBlip2.Exists())
+            {
+                if (playerPed.DistanceTo(droppedItem2) < 3f)
+                {
+                    droppedItem2.Delete();
+                    droppedItemBlip2.Delete();
+                    Game.DisplayNotification("~g~1 ~w~of ~g~1 ~w~peices of evidence recovered. Nice job!");
+                    Game.DisplayNotification("The suspect has been charged with ~y~possession of a controlled substance~w~, and ~r~felony evasion.");
+                }
+            }
         }
     }
 }
