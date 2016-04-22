@@ -63,10 +63,10 @@ namespace StreetCallouts.Callouts
             playerPed = Game.LocalPlayer.Character;
 
             //Set the spawn point of the crime to be on a street around 500f (distance) away from the player.
-            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(520f));
-            while (SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 200f)
+            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(570f));
+            while (SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 305f)
             {
-                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(520f));
+                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(570f));
             }
 
             try
@@ -104,12 +104,12 @@ namespace StreetCallouts.Callouts
             // Set up our callout message and location
             if (Common.myRand.Next(0, 100) < 50)
             {
-                this.CalloutMessage = "Suspicious persons. Possibly using marijuana.";
+                this.CalloutMessage = "Suspicious Persons.\nPossible drug use.";
                 callOutMessage = 1;
             }
             else
             {
-                this.CalloutMessage = "Suspicious party. Possible 415.";
+                this.CalloutMessage = "Suspicious Party.\nPossible 415.";
                 callOutMessage = 2;
             }
 
@@ -239,7 +239,7 @@ namespace StreetCallouts.Callouts
                 {
                     if (droppedItem1.Exists())
                     {
-                        if (playerPed.DistanceTo(droppedItem1) < 30f)
+                        if (playerPed.DistanceTo(droppedItem1) < 30f && !droppedItemBlip1.Exists())
                         {
                             blipHelper1 = new Rage.Object("prop_sh_joint_01", playerPed.Position);
                             NativeFunction.Natives.SetEntityVisible(blipHelper1, false, false);
@@ -250,7 +250,7 @@ namespace StreetCallouts.Callouts
                     }
                     if (droppedItem2.Exists())
                     {
-                        if (playerPed.DistanceTo(droppedItem2) < 30f)
+                        if (playerPed.DistanceTo(droppedItem2) < 30f && !droppedItemBlip2.Exists())
                         {
                             blipHelper2 = new Rage.Object("prop_sh_joint_01", playerPed.Position);
                             NativeFunction.Natives.SetEntityVisible(blipHelper2, false, false);
@@ -285,8 +285,6 @@ namespace StreetCallouts.Callouts
             if(subject1.Exists())
                 if (subject1.IsDead) this.End();
 
-            //if (Functions.IsPedArrested(subject1)) this.End();
-
             if (!subject1.Exists()) this.End();
 
             if (subject1 == null) this.End();
@@ -305,11 +303,6 @@ namespace StreetCallouts.Callouts
                 if (playerPed.IsDead) this.End();
             }
 
-            //if (pursuit != null && !Functions.IsPursuitStillRunning(pursuit))
-            //{
-            //this.End();
-            //}
-
             // Press LCNTRL + LSHFT + Y to force end call out
             if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
             {
@@ -317,7 +310,7 @@ namespace StreetCallouts.Callouts
                 {
                     if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
                     {
-                        Game.DisplaySubtitle("~b~You: ~w~Dispatch we're code 4. Show me ~g~10-8.", 4000);
+                        Game.DisplaySubtitle("~b~You: ~w~Dispatch we're ~g~code 4~w~. Show me 10-8.", 4000);
                         Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)DispatchCopyThat.Length)]);
                         this.End();
                     }
@@ -332,6 +325,8 @@ namespace StreetCallouts.Callouts
         /// </summary>
         public override void End()
         {
+            Game.DisplayNotification("~g~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
+
             if (myBlip.Exists()) myBlip.Delete();
             if (myBlip2.Exists()) myBlip2.Delete();
             if (joint1.Exists()) joint1.Delete();
@@ -361,7 +356,7 @@ namespace StreetCallouts.Callouts
         public void dropWhenFleeing1()
         {
             // wait a little bit before making suspect drop evidence
-            GameFiber.Wait(Common.myRand.Next(5, 10) * 1000);
+            GameFiber.Wait(Common.myRand.Next(6, 14) * 1000);
 
             if (!hasDroppedItem && !droppedItem1.Exists())
             {
@@ -382,7 +377,7 @@ namespace StreetCallouts.Callouts
         public void dropWhenFleeing2()
         {
             // wait a little bit before making suspect drop evidence
-            GameFiber.Wait(Common.myRand.Next(5, 10) * 1000);
+            GameFiber.Wait(Common.myRand.Next(6, 14) * 1000);
 
             if (!hasDroppedItem2 && !droppedItem2.Exists())
             {
@@ -399,27 +394,25 @@ namespace StreetCallouts.Callouts
         {
             if (droppedItem1.Exists() && droppedItemBlip1.Exists())
             {
-                if (playerPed.DistanceTo(droppedItem1) < 3f && !isAnyPursuitStillRunning())
+                if (playerPed.DistanceTo(droppedItem1) < 2f && !isAnyPursuitStillRunning())
                 {
                     droppedItem1.Delete();
                     droppedItemBlip1.Delete();
                     pickedUpItemCount++;
-                    Game.DisplayNotification("~g~" + pickedUpItemCount + "~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
                     GameFiber.Wait(3100);
-                    Game.DisplayNotification("CHARGES: ~y~possession of a controlled substance~w~, and ~r~felony evasion.");
+                    Game.DisplayNotification("You picked up ~r~3.6 grams of Marijuana.");
                 }
             }
 
             if (droppedItem2.Exists() && droppedItemBlip2.Exists())
             {
-                if (playerPed.DistanceTo(droppedItem2) < 3f && !isAnyPursuitStillRunning())
+                if (playerPed.DistanceTo(droppedItem2) < 2f && !isAnyPursuitStillRunning())
                 {
                     droppedItem2.Delete();
                     droppedItemBlip2.Delete();
                     pickedUpItemCount++;
-                    Game.DisplayNotification("~g~" + pickedUpItemCount + "~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
                     GameFiber.Wait(3100);
-                    Game.DisplayNotification("CHARGES: ~y~possession of a controlled substance~w~, and ~r~felony evasion.");
+                    Game.DisplayNotification("You picked up ~r~3.6 grams of Marijuana.");
                 }
             }
         }
