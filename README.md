@@ -6,6 +6,10 @@ Street Callouts aims to give the user the most realistic crime-fighting experien
 
 ![Street Callouts 1](http://s31.postimg.org/5d319ppyz/Street_Callouts1_dropshadow.png)
 
+### Features
+* Press 'Ctrl + Shft + Y' to end a call out at any time.
+* Press 'Insert' key to mark any evidence that was dropped by a fleeing suspect.
+
 ### Coming Soon
 
 Currently under development...
