@@ -15,7 +15,7 @@ namespace StreetCallouts.Callouts
     *
     */
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("ManWithKnife", CalloutProbability.Low)]
+    [CalloutInfo("ManWithKnife", CalloutProbability.Medium)]
     public class ManWithKnife : Callout
     {
         //Here we declare our variables, things we need or our callout
@@ -73,7 +73,7 @@ namespace StreetCallouts.Callouts
             switch (Common.myRand.Next(1, 2))
             {
                 case 1:
-                    this.CalloutMessage = "Subject brandishing a knife at pedestrian.";
+                    this.CalloutMessage = "Subject with a knife.";
                     callOutMessage = 1;
                     break;
                 case 2:
@@ -102,6 +102,9 @@ namespace StreetCallouts.Callouts
 
             //tasks
             subject.Tasks.Wander();
+
+            // let user know how to call it code 4 and go back 10-8
+            Game.DisplayNotification("Press ~y~Cntrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to call scene code 4, and go 10-8.");
 
             Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)this.DispatchCopyThat.Length)]);
             Game.DisplaySubtitle("Contact the ~r~subject.", 6500);
@@ -146,6 +149,7 @@ namespace StreetCallouts.Callouts
                    if(scenario > 40)
                    {
                         subject.Tasks.FightAgainst(playerPed);
+                        hasBegunAttacking = true;
                         GameFiber.Wait(2000);
                     }
                     else
@@ -154,19 +158,19 @@ namespace StreetCallouts.Callouts
                         Functions.AddPedToPursuit(pursuit, subject);
                     }
 
-
-                    switch (Common.myRand.Next(1, 2))
+                   if(this.pursuit != null && !Functions.IsPursuitStillRunning(this.pursuit))
                     {
-                        case 1:
-                            Game.DisplaySubtitle("~r~Suspect: ~w~Kill me, pig! Kill me!", 4000);
-                            break;
-                        case 2:
-                            Game.DisplaySubtitle("~r~Suspect: ~w~Kill me! Come on, kill me!", 4000);
-                            break;
-                        default: break;
+                        switch (Common.myRand.Next(1, 2))
+                        {
+                            case 1:
+                                Game.DisplaySubtitle("~r~Suspect: ~w~Kill me, pig! Kill me!", 4000);
+                                break;
+                            case 2:
+                                Game.DisplaySubtitle("~r~Suspect: ~w~Kill me! Come on, kill me!", 4000);
+                                break;
+                            default: break;
+                        }
                     }
-
-                    hasBegunAttacking = true;
 
                 }   
 

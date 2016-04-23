@@ -10,7 +10,7 @@ using System.Drawing;
 namespace StreetCallouts.Callouts
 {
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("Stolen Vehicle", CalloutProbability.Low)]
+    [CalloutInfo("Stolen Vehicle", CalloutProbability.Medium)]
     public class StolenVehicle : Callout
     {
         //Here we declare our variables, things we need or our callout

@@ -11,7 +11,7 @@ namespace StreetCallouts.Callouts
 {
     // A pedestrian on a BMX bike whom may or may not be carrying drugs on their person ;)
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("SuspiciousPerson1", CalloutProbability.Low)]
+    [CalloutInfo("SuspiciousPerson1", CalloutProbability.Medium)]
     public class SuspiciousPerson1 : Callout
     {
         //Here we declare our variables, things we need or our callout

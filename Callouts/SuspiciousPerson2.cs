@@ -11,7 +11,7 @@ namespace StreetCallouts.Callouts
 {
     // Some naughty people doing drugs, or something naughty like that.
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("SuspiciousPerson2", CalloutProbability.VeryHigh)]
+    [CalloutInfo("SuspiciousPerson2", CalloutProbability.Medium)]
     public class SuspiciousPerson2 : Callout
     {
         //Here we declare our variables, things we need or our callout
@@ -86,15 +86,16 @@ namespace StreetCallouts.Callouts
                 Game.LogVerboseDebug("STACK TRACE: " + e.StackTrace);
             };
 
+            // check for any errors
+            if (!subject1.Exists()) return false;
+            if (!subject2.Exists()) return false;
+
+            subject1.BlockPermanentEvents = true;
+            subject2.BlockPermanentEvents = true;
             subject1.IsPersistent = true;
             subject2.IsPersistent = true;
             NativeFunction.Natives.SetPedPathCanUseClimbovers(subject1, true);
             NativeFunction.Natives.SetPedPathCanUseClimbovers(subject2, true);
-
-
-            // check for any errors
-            if (!subject1.Exists()) return false;
-            if (!subject2.Exists()) return false;
 
             // Show the user where the call out is about to happen and block very close peds.
             this.ShowCalloutAreaBlipBeforeAccepting(SpawnPoint, 100f);
@@ -128,17 +129,28 @@ namespace StreetCallouts.Callouts
         /// <returns></returns>
         public override bool OnCalloutAccepted()
         {
-            //We accepted the callout, so lets initilize our blip from before and attach it to our perp(s) so we know where he is.
-            myBlip = subject1.AttachBlip();
-            myBlip.Color = Color.Yellow;
-            myBlip2 = subject2.AttachBlip();
-            myBlip2.Color = Color.Yellow;
+            try
+            {
+                //We accepted the callout, so lets initilize our blip from before and attach it to our perp(s) so we know where he is.
+                myBlip = subject1.AttachBlip();
+                myBlip.Color = Color.Yellow;
+                myBlip2 = subject2.AttachBlip();
+                myBlip2.Color = Color.Yellow;
+            }
+            catch (Exception e)
+            {
+                Game.LogTrivial("STREETCALLOUTS ERROR: " + e.Message);
+                Game.LogVerboseDebug("STACK TRACE: " + e.StackTrace);
+            };
+
+            if (!myBlip.Exists()) return false;
+            if (!myBlip2.Exists()) return false;
 
             GameFiber.StartNew(delegate
             {
                 //tasks
                 subject1.Tasks.Wander();
-                GameFiber.Wait(16000);
+                GameFiber.Sleep(15000);
                 if(subject1.Exists()) subject1.Tasks.Clear();
                 if(subject2.Exists()) subject2.Tasks.Clear();
                 subject2.Tasks.GoToOffsetFromEntity(subject1, 3f, 1f, 2.0f).WaitForCompletion();
@@ -325,7 +337,8 @@ namespace StreetCallouts.Callouts
         /// </summary>
         public override void End()
         {
-            Game.DisplayNotification("~g~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
+            if(droppedItemCount != 0)
+                Game.DisplayNotification("~g~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
 
             if (myBlip.Exists()) myBlip.Delete();
             if (myBlip2.Exists()) myBlip2.Delete();
@@ -399,7 +412,6 @@ namespace StreetCallouts.Callouts
                     droppedItem1.Delete();
                     droppedItemBlip1.Delete();
                     pickedUpItemCount++;
-                    GameFiber.Wait(3100);
                     Game.DisplayNotification("You picked up ~r~3.6 grams of Marijuana.");
                 }
             }
@@ -411,7 +423,6 @@ namespace StreetCallouts.Callouts
                     droppedItem2.Delete();
                     droppedItemBlip2.Delete();
                     pickedUpItemCount++;
-                    GameFiber.Wait(3100);
                     Game.DisplayNotification("You picked up ~r~3.6 grams of Marijuana.");
                 }
             }
