@@ -52,6 +52,8 @@ namespace StreetCallouts.Callouts
         private int droppedItemCount = 0;
         private int pickedUpItemCount = 0;
         private bool hasIntrod = false;
+        private int storyline1 = 1;
+        private int storyline2 = 1;
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
         /// the callout message and position for the API to display
@@ -63,10 +65,10 @@ namespace StreetCallouts.Callouts
             playerPed = Game.LocalPlayer.Character;
 
             //Set the spawn point of the crime to be on a street around 500f (distance) away from the player.
-            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(570f));
-            while (SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 305f)
+            SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(625f));
+            while (SpawnPoint.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 370f)
             {
-                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(570f));
+                SpawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(625f));
             }
 
             try
@@ -185,8 +187,9 @@ namespace StreetCallouts.Callouts
 
             Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)this.DispatchCopyThat.Length)]);
             Game.DisplaySubtitle("Make contact with the ~r~subjects.", 6500);
-            GameFiber.Wait(1500);
-            Game.DisplayNotification("When on scene, press ~y~Y ~w~to speak with the subject(s).");
+            GameFiber.Wait(2000);
+            // let user know how to end call out
+            Game.DisplayNotification("Press ~y~Ctrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to end the call out at any time.");
 
             return base.OnCalloutAccepted();
         }
@@ -214,6 +217,46 @@ namespace StreetCallouts.Callouts
         {
             base.Process();
 
+            // Subject 1 dialogue
+            if(subject1.Exists() && subject1.IsAlive)
+            {
+                if (!firstPedSmoking && playerPed.DistanceTo(subject1) < 7f)
+                {
+                    if(Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                    {
+                        if(!secondPedSmoking)
+                        {
+                            NativeFunction.Natives.TaskTurnPedToFaceEntity(subject1, playerPed, -1);
+                            Game.DisplayNotification("Press ~y~Y ~w~to speak with the subject(s).");
+
+                            switch (storyline1)
+                            {
+                                case 1:
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Hello officer! What can I do you for?", 4000);
+                                    storyline1++;
+                                    break;
+                                case 2:
+                                    Game.DisplaySubtitle("~b~You: ~w~What are you guys doing?", 4000);
+                                    storyline1++;
+                                    break;
+                                case 3:
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~We're just hanging out waiting for a friend to come pick us up for a concert!", 4000);
+                                    storyline1++;
+                                    break;
+                                case 4:
+                                    Game.DisplaySubtitle("~b~You: You guys wouldn't have any illegal substances or anything like that would you now?", 4000);
+                                    storyline1++;
+                                    break;
+                                case 5:
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Heck no! I just got out of prison, sir! I can't be messing with that stuff any mo'!", 4000);
+                                    storyline1++;
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (firstPedSmoking && !hasPursuitStarted)
             {
                 if (playerPed.DistanceTo(subject1) < 23f && Common.myRand.Next(0, 100) < 40)
@@ -226,6 +269,7 @@ namespace StreetCallouts.Callouts
                     // to make subject drop the joint when running
                     joint1.Delete();
                     joint1 = new Rage.Object("prop_sh_joint_01", subject1.Position.Around(2f));
+                    Game.DisplaySubtitle("Press the ~y~Insert ~w~key to mark any dropped evidence on the minimap!",4500);
                 }
             }
 
@@ -339,6 +383,8 @@ namespace StreetCallouts.Callouts
         {
             if(droppedItemCount != 0)
                 Game.DisplayNotification("~g~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
+            else
+                Game.DisplayNotification("~r~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Better luck next time!");
 
             if (myBlip.Exists()) myBlip.Delete();
             if (myBlip2.Exists()) myBlip2.Delete();
@@ -405,7 +451,7 @@ namespace StreetCallouts.Callouts
         /// </summary>
         public void beginBacktrack()
         {
-            if (droppedItem1.Exists() && droppedItemBlip1.Exists())
+            if (droppedItem1.Exists())
             {
                 if (playerPed.DistanceTo(droppedItem1) < 2f && !isAnyPursuitStillRunning())
                 {
@@ -416,7 +462,7 @@ namespace StreetCallouts.Callouts
                 }
             }
 
-            if (droppedItem2.Exists() && droppedItemBlip2.Exists())
+            if (droppedItem2.Exists())
             {
                 if (playerPed.DistanceTo(droppedItem2) < 2f && !isAnyPursuitStillRunning())
                 {

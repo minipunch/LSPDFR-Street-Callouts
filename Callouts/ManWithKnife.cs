@@ -103,8 +103,8 @@ namespace StreetCallouts.Callouts
             //tasks
             subject.Tasks.Wander();
 
-            // let user know how to call it code 4 and go back 10-8
-            Game.DisplayNotification("Press ~y~Cntrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to call scene code 4, and go 10-8.");
+            // let user know how to end call out
+            Game.DisplayNotification("Press ~y~Ctrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to end the call out at any time.");
 
             Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)this.DispatchCopyThat.Length)]);
             Game.DisplaySubtitle("Contact the ~r~subject.", 6500);
@@ -156,17 +156,21 @@ namespace StreetCallouts.Callouts
                     {
                         pursuit = Functions.CreatePursuit();
                         Functions.AddPedToPursuit(pursuit, subject);
+                        NativeFunction.Natives.TaskSwapWeapon(subject, true);
                     }
 
                    if(this.pursuit != null && !Functions.IsPursuitStillRunning(this.pursuit))
                     {
-                        switch (Common.myRand.Next(1, 2))
+                        switch (Common.myRand.Next(1, 3))
                         {
                             case 1:
                                 Game.DisplaySubtitle("~r~Suspect: ~w~Kill me, pig! Kill me!", 4000);
                                 break;
                             case 2:
                                 Game.DisplaySubtitle("~r~Suspect: ~w~Kill me! Come on, kill me!", 4000);
+                                break;
+                            case 3:
+                                Game.DisplaySubtitle("~r~Suspect: ~w~Shoot me! Come on, shoot me!", 4000);
                                 break;
                             default: break;
                         }

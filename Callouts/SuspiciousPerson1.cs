@@ -164,7 +164,7 @@ namespace StreetCallouts.Callouts
                         switch (storyLine)
                         {
                             case 1:
-                                Game.DisplaySubtitle("~y~Suspect: ~w~I was just going to my friends house sir! He lives right down the road!", 5000);
+                                Game.DisplaySubtitle("~y~Suspect: ~w~I was just going to my friends house sir! He lives right down the road! (1/3)", 5000);
                                 storyLine++;
                                 break;
                             case 2:
@@ -172,7 +172,7 @@ namespace StreetCallouts.Callouts
                                 storyLine++;
                                 break;
                             case 3:
-                                Game.DisplaySubtitle("~y~Suspect: ~w~I just came from the Ring Of Fire around the corner! Here's the receipt sir!", 5000);
+                                Game.DisplaySubtitle("~y~Suspect: ~w~I just came from the Ring Of Fire around the corner! Here's the receipt sir! (2/3)", 5000);
                                 storyLine++;
                                 break;
                             case 4:
@@ -186,11 +186,11 @@ namespace StreetCallouts.Callouts
                                 break;
                             case 5:
                                 if (callOutMessage == 1)
-                                    Game.DisplaySubtitle("~y~Suspect: ~w~Haha -- peering into vehicles? Sir i'm just riding my bike, sir...", 5000);
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Haha -- peering into vehicles? Sir i'm just riding my bike, sir... (3/3)", 5000);
                                 if (callOutMessage == 2)
-                                    Game.DisplaySubtitle("~y~Suspect: ~w~Sir -- no way i'm not like that, sir.", 5000);
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Sir -- no way i'm not like that, sir. (3/3)", 5000);
                                 if (callOutMessage == 3)
-                                    Game.DisplaySubtitle("~y~Suspect: ~w~Yeah, right! And where was that? I know my rights sir, my lawyer told me not to let cops search me.", 5000);
+                                    Game.DisplaySubtitle("~y~Suspect: ~w~Yeah, right! And where was that? I know my rights sir, my lawyer told me not to let cops search me. (3/3)", 5000);
                                 storyLine++;
                                 // random chance to flee during this part of interaction
                                 if(Common.myRand.Next(1,4) == 4)
