@@ -37,6 +37,8 @@ namespace StreetCallouts.Callouts
         private bool isArmed = false;
         private int storyLine = 1;
         private Ped[] pedAr;
+        private bool hasPursuitBegun = false;
+        private bool hasSpoke = false;
 
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
@@ -148,31 +150,34 @@ namespace StreetCallouts.Callouts
                 {
                    if(scenario > 40)
                    {
+                        subject.KeepTasks = true;
                         subject.Tasks.FightAgainst(playerPed);
                         hasBegunAttacking = true;
-                        GameFiber.Wait(2000);
-                    }
-                    else
-                    {
-                        pursuit = Functions.CreatePursuit();
-                        Functions.AddPedToPursuit(pursuit, subject);
-                        NativeFunction.Natives.TaskSwapWeapon(subject, true);
-                    }
-
-                   if(this.pursuit != null && !Functions.IsPursuitStillRunning(this.pursuit))
-                    {
                         switch (Common.myRand.Next(1, 3))
                         {
                             case 1:
                                 Game.DisplaySubtitle("~r~Suspect: ~w~Kill me, pig! Kill me!", 4000);
+                                hasSpoke = true;
                                 break;
                             case 2:
                                 Game.DisplaySubtitle("~r~Suspect: ~w~Kill me! Come on, kill me!", 4000);
+                                hasSpoke = true;
                                 break;
                             case 3:
                                 Game.DisplaySubtitle("~r~Suspect: ~w~Shoot me! Come on, shoot me!", 4000);
+                                hasSpoke = true;
                                 break;
                             default: break;
+                        }
+                        GameFiber.Wait(2000);
+                    }
+                    else
+                    {
+                        if(!hasPursuitBegun)
+                        {
+                            pursuit = Functions.CreatePursuit();
+                            Functions.AddPedToPursuit(pursuit, subject);
+                            hasPursuitBegun = true;
                         }
                     }
 

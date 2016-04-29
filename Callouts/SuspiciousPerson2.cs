@@ -11,7 +11,7 @@ namespace StreetCallouts.Callouts
 {
     // Some naughty people doing drugs, or something naughty like that.
     //Give your callout a string name and a probability of spawning. We also inherit from the Callout class, as this is a callout
-    [CalloutInfo("SuspiciousPerson2", CalloutProbability.Medium)]
+    [CalloutInfo("SuspiciousPerson2", CalloutProbability.VeryHigh)]
     public class SuspiciousPerson2 : Callout
     {
         //Here we declare our variables, things we need or our callout
@@ -53,7 +53,10 @@ namespace StreetCallouts.Callouts
         private int pickedUpItemCount = 0;
         private bool hasIntrod = false;
         private int storyline1 = 1;
-        private int storyline2 = 1;
+        private bool playerHasDied = false;
+        private bool isOnPhone1 = false;
+        private bool isOnPhone2 = false;
+
         /// <summary>
         /// OnBeforeCalloutDisplayed is where we create a blip for the user to see where the pursuit is happening, we initiliaize any variables above and set
         /// the callout message and position for the API to display
@@ -150,12 +153,20 @@ namespace StreetCallouts.Callouts
 
             GameFiber.StartNew(delegate
             {
-                //tasks
-                subject1.Tasks.Wander();
-                GameFiber.Sleep(15000);
-                if(subject1.Exists()) subject1.Tasks.Clear();
-                if(subject2.Exists()) subject2.Tasks.Clear();
-                subject2.Tasks.GoToOffsetFromEntity(subject1, 3f, 1f, 2.0f).WaitForCompletion();
+                // max distance check for the two subjects so they don't separate
+                if (subject1.DistanceTo(subject2) > 10f)
+                {
+                    subject1.Tasks.GoToOffsetFromEntity(subject2, 7f, 1f, 2.0f);
+                }
+
+                if (subject2.DistanceTo(subject1) > 10f)
+                {
+                    subject2.Tasks.GoToOffsetFromEntity(subject1, 7f, 1f, 2.0f);
+                }
+
+                // stand still
+                if (subject1.Exists()) subject1.Velocity = Vector3.Zero;
+                if (subject2.Exists()) subject2.Velocity = Vector3.Zero;
 
                 // 40% chance for first ped to be smoking
                 if (Common.myRand.Next(0, 100) < 40)
@@ -169,8 +180,8 @@ namespace StreetCallouts.Callouts
 
                 GameFiber.Wait(1000);
 
-                // 25% chance for second ped to be smoking
-                if (scenario < 25)
+                // 35% chance for second ped to be smoking
+                if (scenario < 35)
                 {
                     joint2 = new Rage.Object("prop_sh_joint_01", pedCoords2);
                     boneIndex = NativeFunction.Natives.GET_PED_BONE_INDEX<int>(subject2, (int)PedBoneId.RightIndexFinger1);
@@ -179,9 +190,6 @@ namespace StreetCallouts.Callouts
                     secondPedSmoking = true;
                 }
 
-                if (!firstPedSmoking) subject1.Velocity = Vector3.Zero;
-                if (!secondPedSmoking) subject2.Velocity = Vector3.Zero;
-
             }, "Dope Smokers Fiber 1 [STREET CALLOUTS]");
 
 
@@ -189,7 +197,7 @@ namespace StreetCallouts.Callouts
             Game.DisplaySubtitle("Make contact with the ~r~subjects.", 6500);
             GameFiber.Wait(2000);
             // let user know how to end call out
-            Game.DisplayNotification("Press ~y~Ctrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to end the call out at any time.");
+            Game.DisplayHelp("Press ~y~Ctrl ~w~+ ~y~Shft ~w~+ ~y~Y ~w~to end the call out at any time.");
 
             return base.OnCalloutAccepted();
         }
@@ -217,17 +225,30 @@ namespace StreetCallouts.Callouts
         {
             base.Process();
 
-            // Subject 1 dialogue
-            if(subject1.Exists() && subject1.IsAlive)
+            if(playerPed.Exists())
             {
-                if (!firstPedSmoking && playerPed.DistanceTo(subject1) < 7f)
+                if(playerPed.IsDead)
                 {
-                    if(Game.IsKeyDown(System.Windows.Forms.Keys.Y))
+                    playerHasDied = true;
+                }
+            }
+
+            // Subject 1 dialogue
+            if (subject1.Exists() && subject1.IsAlive && !hasPursuitStarted && !hasPursuitStarted2)
+            {
+                if (!firstPedSmoking && playerPed.DistanceTo(subject1) < 15f)
+                {
+                    if(!hasIntrod)
+                    {
+                        Game.DisplayHelp("Press ~y~Y ~w~to speak with the subject(s).");
+                        hasIntrod = true;
+                    }
+
+                    if (Game.IsKeyDown(System.Windows.Forms.Keys.Y))
                     {
                         if(!secondPedSmoking)
                         {
-                            NativeFunction.Natives.TaskTurnPedToFaceEntity(subject1, playerPed, -1);
-                            Game.DisplayNotification("Press ~y~Y ~w~to speak with the subject(s).");
+                            NativeFunction.Natives.TaskTurnPedToFaceEntity(subject1, playerPed, 4500);
 
                             switch (storyline1)
                             {
@@ -244,7 +265,7 @@ namespace StreetCallouts.Callouts
                                     storyline1++;
                                     break;
                                 case 4:
-                                    Game.DisplaySubtitle("~b~You: You guys wouldn't have any illegal substances or anything like that would you now?", 4000);
+                                    Game.DisplaySubtitle("~b~You: ~w~You guys wouldn't have any illegal substances or anything like that would you now?", 4000);
                                     storyline1++;
                                     break;
                                 case 5:
@@ -269,7 +290,7 @@ namespace StreetCallouts.Callouts
                     // to make subject drop the joint when running
                     joint1.Delete();
                     joint1 = new Rage.Object("prop_sh_joint_01", subject1.Position.Around(2f));
-                    Game.DisplaySubtitle("Press the ~y~Insert ~w~key to mark any dropped evidence on the minimap!",4500);
+                    Game.DisplayNotification("Press the ~y~Insert ~w~key to mark evidence on the minimap!");
                 }
             }
 
@@ -366,7 +387,7 @@ namespace StreetCallouts.Callouts
                 {
                     if (Game.IsKeyDownRightNow(System.Windows.Forms.Keys.LControlKey))
                     {
-                        Game.DisplaySubtitle("~b~You: ~w~Dispatch we're ~g~code 4~w~. Show me 10-8.", 4000);
+                        Game.DisplaySubtitle("~b~You: ~w~Dispatch we're ~g~CODE 4~w~. Show me 10-8.", 4000);
                         Functions.PlayScannerAudio(this.DispatchCopyThat[Common.myRand.Next((int)DispatchCopyThat.Length)]);
                         this.End();
                     }
@@ -381,9 +402,9 @@ namespace StreetCallouts.Callouts
         /// </summary>
         public override void End()
         {
-            if(droppedItemCount != 0)
+            if(droppedItemCount != 0 && !playerHasDied)
                 Game.DisplayNotification("~g~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Nice job!");
-            else
+            else if(droppedItemCount == 0 && (hasPursuitStarted || hasPursuitStarted2))
                 Game.DisplayNotification("~r~" + pickedUpItemCount + " ~w~of ~g~" + droppedItemCount + " ~w~peices of evidence recovered. Better luck next time!");
 
             if (myBlip.Exists()) myBlip.Delete();

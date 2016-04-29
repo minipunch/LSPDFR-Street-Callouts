@@ -45,10 +45,10 @@ namespace StreetCallouts
             {
                 //If the player goes on duty we need to register our custom callouts
                 //Here we register our ExampleCallout class which is inside our Callouts folder (APIExample.Callouts namespace)
-                Functions.RegisterCallout(typeof(StolenVehicle));
-                Functions.RegisterCallout(typeof(SuspiciousPerson1));
+                //Functions.RegisterCallout(typeof(StolenVehicle));
+                //Functions.RegisterCallout(typeof(SuspiciousPerson1));
                 Functions.RegisterCallout(typeof(SuspiciousPerson2));
-                Functions.RegisterCallout(typeof(ManWithKnife));
+                //Functions.RegisterCallout(typeof(ManWithKnife));
                 Game.LogTrivial("Street Callouts HAS BEEN LOADED");
             }
         }

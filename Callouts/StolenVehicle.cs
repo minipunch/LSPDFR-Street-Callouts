@@ -142,6 +142,7 @@ namespace StreetCallouts.Callouts
             if(scenario == 3)
                 if (perp2.Exists()) perp2.Delete();
             if (perpVehicle.Exists()) perpVehicle.Delete();
+            if (backupOfficer1.Exists()) backupOfficer1.Dismiss();
             if (backupVehicle.Exists()) backupVehicle.Delete();
             if (myBlip.Exists()) myBlip.Delete();
             
@@ -201,7 +202,8 @@ namespace StreetCallouts.Callouts
             if(scenario == 3)
                 if (perp2.Exists()) perp2.Dismiss();
             if (perpVehicle.Exists()) perpVehicle.Dismiss();
-            if (backupVehicle.Exists()) backupVehicle.Dismiss();
+            if (backupOfficer1.Exists()) backupOfficer1.Dismiss();
+            if (backupVehicle.Exists()) backupVehicle.Delete();
         }
     }
 }
